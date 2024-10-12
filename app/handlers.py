@@ -68,11 +68,11 @@ async def handle_message(message: Message):
 
         inline_kb = InlineKeyboardMarkup(
             inline_keyboard=[
-                [InlineKeyboardButton(text="That wasn't spam", callback_data=f"restore_{message_id}")]
+                [InlineKeyboardButton(text="Это был не спам", callback_data=f"restore_{message_id}")]
             ]
         )
         try:
-            await message.answer("Detected spam, message deleted.", reply_markup=inline_kb)
+            await message.answer("Обнаружен спам, сообщение удалено.", reply_markup=inline_kb)
         except Exception as e:
             logging.error(f"Failed to send notification for message ID {message_id}: {e}")
 
@@ -84,7 +84,7 @@ async def restore_message(callback: CallbackQuery):
     try:
         message_id = int(message_id_str)
     except ValueError:
-        await callback.answer("Invalid message ID.", show_alert=True)
+        await callback.answer("Некорректный ID.", show_alert=True)
         logging.warning(f"Invalid message ID received in callback: {message_id_str}")
         return
 
@@ -95,7 +95,7 @@ async def restore_message(callback: CallbackQuery):
 
         try:
             username = callback.from_user.username or callback.from_user.first_name
-            await callback.message.answer(f"Restored message from {username}: {message_text}")
+            await callback.message.answer(f"Восстановленное сообщение от {username}: {message_text}")
             
             logging.info(f"Restored message | User ID: {user_id} | Message ID: {message_id} | Content: {message_text}")
         except Exception as e:
@@ -103,7 +103,7 @@ async def restore_message(callback: CallbackQuery):
 
         del deleted_messages[message_id]
 
-        await callback.answer("Message restored.", show_alert=True)
+        await callback.answer("Сообщение восстановлено.", show_alert=True)
     else:
-        await callback.answer("Message cannot be restored.", show_alert=True)
+        await callback.answer("Данное сообщение больше не может быть восстановлено.", show_alert=True)
         logging.warning(f"Attempted to restore non-existent message ID: {message_id}")
