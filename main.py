@@ -7,8 +7,7 @@ from keep_alive import keep_alive
 keep_alive()
 
 async def main():
-    # bot = Bot(token=os.environ.get('TELEGRAM_BOT_TOKEN'))
-    bot = Bot(token = '7920824189:AAEF6Y58VHQQzShKFI-b05w3lpMFA2Fz-kE')
+    bot = Bot(token=os.environ.get('TELEGRAM_BOT_TOKEN'))
     dp = Dispatcher()
     dp.include_router(router)
     await dp.start_polling(bot)
