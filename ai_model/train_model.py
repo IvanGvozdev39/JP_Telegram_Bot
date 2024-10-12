@@ -37,7 +37,7 @@ def save_model(model, vectorizer):
         pickle.dump(vectorizer, vectorizer_file)
 
 if __name__ == "__main__":
-    texts, labels = load_data('data.json')
+    texts, labels = load_data('ai_model/data.json')
     model, vectorizer = train_model(texts, labels)
     save_model(model, vectorizer)
     print("Model training complete and saved.")
