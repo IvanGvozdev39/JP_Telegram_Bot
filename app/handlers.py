@@ -3,6 +3,7 @@ import pickle
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, ChatMemberUpdated
 from aiogram.filters.chat_member_updated import ChatMemberUpdatedFilter, IS_MEMBER, IS_ADMIN
+from aiogram.filters import Command
 
 router = Router()
 
@@ -12,6 +13,8 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     encoding='utf-8'
 )
+
+
 
 def load_model():
     try:
@@ -25,6 +28,7 @@ def load_model():
         raise
 
 
+
 def predict_message(model, vectorizer, message):
     try:
         message_vector = vectorizer.transform([message])
@@ -35,15 +39,19 @@ def predict_message(model, vectorizer, message):
         return "not_spam" # not_spam if prediction fails
 
 
+
 model, vectorizer = load_model()
 
 deleted_messages = {}
+
 
 
 def maintain_deleted_message_limit(limit=20):
     if len(deleted_messages) > limit:
         oldest_message_id = next(iter(deleted_messages))
         del deleted_messages[oldest_message_id]
+
+
 
 @router.message(F.text)
 async def handle_message(message: Message):
@@ -75,7 +83,8 @@ async def handle_message(message: Message):
             await message.answer("Обнаружен спам, сообщение удалено.", reply_markup=inline_kb)
         except Exception as e:
             logging.error(f"Failed to send notification for message ID {message_id}: {e}")
-
+            
+            
 
 @router.callback_query(F.data.startswith('restore_'))
 async def restore_message(callback: CallbackQuery):
