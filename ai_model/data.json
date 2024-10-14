@@ -631,5 +631,45 @@
     {
         "text": "Оо",
         "label": "not_spam"
+    },
+    {
+        "text": "Сейчас только этот флуд исправим",
+        "label": "not_spam"
+    },
+    {
+        "text": "Сейчас этот флуд исправим",
+        "label": "not_spam"
+    },
+    {
+        "text": "Сейчас только этот флуд исправим, сделав уведомления менее явными",
+        "label": "not_spam"
+    },
+    {
+        "text": "Сейчас",
+        "label": "not_spam"
+    },
+    {
+        "text": "Прямо сейчас",
+        "label": "not_spam"
+    },
+    {
+        "text": "В лс",
+        "label": "not_spam"
+    },
+    {
+        "text": "в лс",
+        "label": "not_spam"
+    },
+    {
+        "text": "Погнали в личку",
+        "label": "not_spam"
+    },
+    {
+        "text": "Пошли в личку",
+        "label": "not_spam"
+    },
+    {
+        "text": "Пошли пообщаемся в личные сообщения",
+        "label":"not_spam"
     }
 ]

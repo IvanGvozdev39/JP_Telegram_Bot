@@ -1,8 +1,8 @@
 import logging
 import pickle
+import asyncio
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.filters import Command
 
 router = Router()
 
@@ -36,6 +36,7 @@ def predict_message(model, vectorizer, message):
 model, vectorizer = load_model()
 
 deleted_messages = {}
+delete_tasks = {}
 
 def maintain_deleted_message_limit(limit=20):
     if len(deleted_messages) > limit:
@@ -44,7 +45,7 @@ def maintain_deleted_message_limit(limit=20):
 
 @router.message(F.text)
 async def handle_message(message: Message):
-    global deleted_messages
+    global deleted_messages, delete_tasks
 
     user_id = message.from_user.id
     message_id = message.message_id
@@ -69,12 +70,33 @@ async def handle_message(message: Message):
             ]
         )
         try:
-            await message.answer("Обнаружен спам, сообщение удалено.", reply_markup=inline_kb)
+            warning_message = await message.answer("Обнаружен спам, сообщение удалено.", reply_markup=inline_kb)
+
+            delete_task = asyncio.create_task(delete_warning_after_timeout(warning_message, message_id))
+
+            delete_tasks[message_id] = delete_task
+
         except Exception as e:
             logging.error(f"Failed to send notification for message ID {message_id}: {e}")
 
+
+
+async def delete_warning_after_timeout(warning_message: Message, message_id: int):
+    await asyncio.sleep(40)
+
+    if message_id in deleted_messages:
+        try:
+            await warning_message.delete()
+            logging.info(f"Deleted the spam notification for Message ID: {message_id}")
+        except Exception as e:
+            logging.error(f"Failed to delete spam notification for Message ID {message_id}: {e}")
+
+        delete_tasks.pop(message_id, None)
+
 @router.callback_query(F.data.startswith('restore_'))
 async def restore_message(callback: CallbackQuery):
+    global delete_tasks
+
     message_id_str = callback.data.split('_')[1]
     
     try:
@@ -96,6 +118,13 @@ async def restore_message(callback: CallbackQuery):
                 await callback.message.answer(f"Восстановленное сообщение от {username}: {message_text}")
                 
                 logging.info(f"Restored message | User ID: {original_user_id} | Message ID: {message_id} | Content: {message_text}")
+
+                await callback.message.delete()
+
+                if message_id in delete_tasks:
+                    delete_tasks[message_id].cancel()
+                    delete_tasks.pop(message_id, None)
+
             except Exception as e:
                 logging.error(f"Failed to restore message ID {message_id}: {e}")
 
