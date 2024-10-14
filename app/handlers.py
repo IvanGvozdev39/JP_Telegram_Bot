@@ -70,7 +70,7 @@ async def handle_message(message: Message):
             ]
         )
         try:
-            warning_message = await message.answer("Обнаружен спам, сообщение удалено.", reply_markup=inline_kb)
+            warning_message = await message.answer("Обнаружен спам, сообщение удалено.", reply_markup=inline_kb, disable_notification=True)
 
             delete_task = asyncio.create_task(delete_warning_after_timeout(warning_message, message_id))
 
