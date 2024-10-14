@@ -1,8 +1,7 @@
 import logging
 import pickle
 from aiogram import F, Router
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, ChatMemberUpdated
-from aiogram.filters.chat_member_updated import ChatMemberUpdatedFilter, IS_MEMBER, IS_ADMIN
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 
 router = Router()
@@ -13,8 +12,6 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     encoding='utf-8'
 )
-
-
 
 def load_model():
     try:
@@ -27,8 +24,6 @@ def load_model():
         logging.error(f"Error loading model/vectorizer: {e}")
         raise
 
-
-
 def predict_message(model, vectorizer, message):
     try:
         message_vector = vectorizer.transform([message])
@@ -36,22 +31,16 @@ def predict_message(model, vectorizer, message):
         return prediction[0]
     except Exception as e:
         logging.error(f"Error during prediction: {e}")
-        return "not_spam" # not_spam if prediction fails
-
-
+        return "not_spam"  # Return "not_spam" if prediction fails
 
 model, vectorizer = load_model()
 
 deleted_messages = {}
 
-
-
 def maintain_deleted_message_limit(limit=20):
     if len(deleted_messages) > limit:
         oldest_message_id = next(iter(deleted_messages))
         del deleted_messages[oldest_message_id]
-
-
 
 @router.message(F.text)
 async def handle_message(message: Message):
@@ -83,8 +72,6 @@ async def handle_message(message: Message):
             await message.answer("Обнаружен спам, сообщение удалено.", reply_markup=inline_kb)
         except Exception as e:
             logging.error(f"Failed to send notification for message ID {message_id}: {e}")
-            
-            
 
 @router.callback_query(F.data.startswith('restore_'))
 async def restore_message(callback: CallbackQuery):
@@ -99,20 +86,25 @@ async def restore_message(callback: CallbackQuery):
 
     if message_id in deleted_messages:
         original_message = deleted_messages[message_id]
-        user_id = original_message.from_user.id
+        original_user_id = original_message.from_user.id
         message_text = original_message.text
+        current_user_id = callback.from_user.id
 
-        try:
-            username = callback.from_user.username or callback.from_user.first_name
-            await callback.message.answer(f"Восстановленное сообщение от {username}: {message_text}")
-            
-            logging.info(f"Restored message | User ID: {user_id} | Message ID: {message_id} | Content: {message_text}")
-        except Exception as e:
-            logging.error(f"Failed to restore message ID {message_id}: {e}")
+        if current_user_id == original_user_id:
+            try:
+                username = callback.from_user.first_name or callback.from_user.username
+                await callback.message.answer(f"Восстановленное сообщение от {username}: {message_text}")
+                
+                logging.info(f"Restored message | User ID: {original_user_id} | Message ID: {message_id} | Content: {message_text}")
+            except Exception as e:
+                logging.error(f"Failed to restore message ID {message_id}: {e}")
 
-        del deleted_messages[message_id]
+            del deleted_messages[message_id]
 
-        await callback.answer("Сообщение восстановлено.", show_alert=True)
+            await callback.answer("Сообщение восстановлено.", show_alert=True)
+        else:
+            await callback.answer("Только отправитель может восстанавливатьс .", show_alert=True)
+            logging.warning(f"User {current_user_id} attempted to restore message from user {original_user_id}")
     else:
         await callback.answer("Данное сообщение больше не может быть восстановлено.", show_alert=True)
         logging.warning(f"Attempted to restore non-existent message ID: {message_id}")
