@@ -103,7 +103,7 @@ async def restore_message(callback: CallbackQuery):
 
             await callback.answer("Сообщение восстановлено.", show_alert=True)
         else:
-            await callback.answer("Только отправитель может восстанавливатьс .", show_alert=True)
+            await callback.answer("Только отправитель может восстанавливать свое сообщение.", show_alert=True)
             logging.warning(f"User {current_user_id} attempted to restore message from user {original_user_id}")
     else:
         await callback.answer("Данное сообщение больше не может быть восстановлено.", show_alert=True)
